@@ -26,6 +26,7 @@ func primeNumbersInRange(number int) int {
 }
 
 func main() {
-	var number int = 1000
+	var number int
+	fmt.Scan(&number)
 	fmt.Println("Number of Primes : ", primeNumbersInRange(number))
 }
