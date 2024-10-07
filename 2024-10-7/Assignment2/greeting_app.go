@@ -4,16 +4,18 @@ import (
 	"fmt"
 )
 
+const goodMorning string = "Good morning!"
+const goodAfternoon string = "Good afternoon!"
+const goodEvening string = "Good evening!"
+const goodNight string = "Good night!"
+
 // Good morning! : When the time is between 6:00:01 am to 11:00:00 am
 // Good afternoon! : When the time is between 11:00:01 am to 4:00:00 pm
 // Good evening! : When the time is between 4:00:01 pm to 9:00:00 pm
 // Good night! : When the time is between 9:00:01 pm to 6:00:00 am
 
-func main() {
-	const goodMorning string = "Good morning!"
-	const goodAfternoon string = "Good afternoon!"
-	const goodEvening string = "Good evening!"
-	const goodNight string = "Good night!"
+func greetings() {
+
 	fmt.Print("Enter the Time Of the Day (HH:mm:ss am/pm):")
 	var meridian string
 	var hour, min, sec int
@@ -39,4 +41,8 @@ func main() {
 		fmt.Println(goodNight)
 	}
 
+}
+
+func main() {
+	greetings()
 }
