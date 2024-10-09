@@ -71,8 +71,14 @@ func (u *User) GetAllStaff() ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return allStaff, nil
+	var tempStaff []*User
+	for _, userObject := range allStaff {
+		if !userObject.IsActive {
+			continue
+		}
+		tempStaff = append(tempStaff, userObject)
+	}
+	return tempStaff, nil
 }
 
 func (u *User) GetStaffByID(userId int) (*User, error) {
@@ -81,6 +87,9 @@ func (u *User) GetStaffByID(userId int) (*User, error) {
 		return nil, err
 	}
 	for _, userObject := range allStaff {
+		if !userObject.IsActive {
+			continue
+		}
 		if userObject.UserId == userId {
 			return userObject, nil
 		}
