@@ -23,6 +23,10 @@ func main() {
 	testSemesterCGPA = append(testSemesterCGPA, 9)
 	testSemesterCGPA = append(testSemesterCGPA, 8)
 	testStudent.UpdateStudent("yearOfPassing", 2025)
+	university.DeleteStudent(testStudent)
+	for studentNumber, studentObject := range university.GetAllStudents() {
+		fmt.Println(studentNumber, studentObject)
+	}
 	// testStudent.UpdateStudent("firstName", 10)
 	fmt.Println(testStudent)
 

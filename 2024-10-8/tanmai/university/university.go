@@ -33,14 +33,19 @@ func NewStudent(firstName string,
 	semesterCGPA []float32,
 	yearOfEnrollment int,
 	yearOfPassing int) *student {
-
+	validateFirstName(firstName)
+	validateLastName(lastName)
 	validateDateOfBirth(dateOfBirth)
 	validateYearOfPassingIsAfterYearOfEnrollment(yearOfEnrollment, yearOfPassing)
+	validateAllCGPAs(semesterCGPA)
 
 	var semesterGrades []string
 	var finalGrade string
 	var finalCGPA float32
-	semesterGrades = calculateSemesterGradesFromSemesterCGPA(semesterCGPA)
+	var fullName string = getFullNameFromFirstAndLastName(firstName, lastName)
+	var age int = getAgeFromDOB(dateOfBirth)
+	var numberOfYearsToGraduate int = getNumberOfYearsToGraduateFromPassingYear(yearOfPassing)
+	calculateSemesterGradesFromSemesterCGPA(semesterCGPA, &semesterGrades)
 	finalCGPA = calculateFinalCGPAFromSemesterCGPA(semesterCGPA)
 	finalGrade = getGradeFromCGPA(finalCGPA)
 
@@ -48,16 +53,16 @@ func NewStudent(firstName string,
 
 		firstName:               firstName,
 		lastName:                lastName,
-		fullName:                getFullNameFromFirstAndLastName(firstName, lastName),
+		fullName:                fullName,
 		dateOfBirth:             dateOfBirth,
-		age:                     getAgeFromDOB(dateOfBirth),
+		age:                     age,
 		semesterCGPA:            semesterCGPA,
 		finalCGPA:               finalCGPA,
 		semesterGrades:          semesterGrades,
 		finalGrade:              finalGrade,
 		yearOfEnrollment:        yearOfEnrollment,
 		yearOfPassing:           yearOfPassing,
-		numberOfYearsToGraduate: getNumberOfYearsToGraduateFromPassingYear(yearOfPassing),
+		numberOfYearsToGraduate: numberOfYearsToGraduate,
 	}
 	allStudents = append(allStudents, temporaryStudentObject)
 	return temporaryStudentObject
@@ -67,53 +72,18 @@ func NewStudent(firstName string,
 func (s *student) UpdateStudent(parameter string, value interface{}) {
 	switch parameter {
 	case "firstName":
-		tempFirstNameVariable, stringValidation := value.(string)
-		if !stringValidation {
-			panic("Please enter Correct First Name")
-		}
-		s.firstName = tempFirstNameVariable
-		s.fullName = getFullNameFromFirstAndLastName(s.firstName, s.lastName)
+		s.updateFirstName(value)
 	case "lastName":
-		tempLastNameVariable, stringValidation := value.(string)
-		if !stringValidation {
-			panic("Please enter Correct Last Name")
-		}
-		s.lastName = tempLastNameVariable
-		s.fullName = getFullNameFromFirstAndLastName(s.firstName, s.lastName)
+		s.updateLastName(value)
 	case "dateOfBirth":
-		tempDateOfBirthVariable, stringValidation := value.(string)
-		if !stringValidation {
-			panic("Date of Birth should be a String")
-		}
-		validateDateOfBirth(tempDateOfBirthVariable)
-		s.dateOfBirth = tempDateOfBirthVariable
-		s.age = getAgeFromDOB(tempDateOfBirthVariable)
-	case "yearOfEnrollment":
-		tempYearOfEnrollmentVariable, intValidation := value.(int)
-		if !intValidation {
-			panic("Year of Enrollment should be Integer")
-		}
-		validateYearOfPassingIsAfterYearOfEnrollment(tempYearOfEnrollmentVariable, s.yearOfPassing)
-		s.yearOfEnrollment = tempYearOfEnrollmentVariable
-	case "yearOfPassing":
-		tempYearOfPassingVariable, intValidation := value.(int)
-		if !intValidation {
-			panic("Year of Passing should be Integer")
-		}
-		validateYearOfPassingIsAfterYearOfEnrollment(s.yearOfEnrollment, tempYearOfPassingVariable)
-		s.yearOfPassing = tempYearOfPassingVariable
-		s.numberOfYearsToGraduate = getNumberOfYearsToGraduateFromPassingYear(tempYearOfPassingVariable)
-	case "semesterCGPA":
-		tempSemesterCPGAVariable, floatSliceValidation := value.([]float32)
-		if !floatSliceValidation {
-			panic("Invalid Array of CGPA")
-		}
-		validateAllCGPAs(tempSemesterCPGAVariable)
-		s.semesterCGPA = tempSemesterCPGAVariable
-		s.semesterGrades = calculateSemesterGradesFromSemesterCGPA(tempSemesterCPGAVariable)
+		s.updateDateOfBirth(value)
 
-		s.finalCGPA = calculateFinalCGPAFromSemesterCGPA(tempSemesterCPGAVariable)
-		s.finalGrade = getGradeFromCGPA(s.finalCGPA)
+	case "yearOfEnrollment":
+		s.updateYearOfEnrollment(value)
+	case "yearOfPassing":
+		s.updateYearOfPassing(value)
+	case "semesterCGPA":
+		s.updateSemesterGrades(value)
 	case "default":
 		panic("Invalid Choice to Update")
 
@@ -178,12 +148,11 @@ func getNumberOfYearsToGraduateFromPassingYear(year int) int {
 
 // ## Cannot use semester Grades as Parameter directly because whenever new Grades are appended, new Memory Location is allocated
 
-func calculateSemesterGradesFromSemesterCGPA(semesterCGPA []float32) []string {
-	var semesterGrades []string
+func calculateSemesterGradesFromSemesterCGPA(semesterCGPA []float32, semesterGrades *[]string) {
+
 	for _, CGPA := range semesterCGPA {
-		semesterGrades = append(semesterGrades, getGradeFromCGPA(CGPA))
+		*semesterGrades = append(*semesterGrades, getGradeFromCGPA(CGPA))
 	}
-	return semesterGrades
 }
 
 func calculateFinalCGPAFromSemesterCGPA(semesterCGPA []float32) float32 {
@@ -227,8 +196,89 @@ func validateCGPA(CGPA float32) {
 	}
 }
 
+func validateFirstName(name string) {
+	if len(name) == 0 {
+		panic("Name Cannot be empty")
+	}
+}
+
+func validateLastName(name string) {
+	if len(name) == 0 {
+		panic("Name Cannot be empty")
+	}
+}
+
 func validateYearOfPassingIsAfterYearOfEnrollment(yearOfEnrollment int, yearOfPassing int) {
+	if yearOfEnrollment > time.Now().Year() {
+		panic("Year of Enrollment Cannot be in Future")
+	}
 	if yearOfPassing < yearOfEnrollment {
 		panic("Year of Passing Cannot be before Year of Enrollment")
 	}
+}
+
+/////update Functions/////////////////////////////////////////
+
+func (s *student) updateFirstName(value interface{}) {
+	tempFirstNameVariable, stringValidation := value.(string)
+	if !stringValidation {
+		panic("Please enter Correct First Name")
+	}
+	validateFirstName(tempFirstNameVariable)
+	s.firstName = tempFirstNameVariable
+	s.fullName = getFullNameFromFirstAndLastName(s.firstName, s.lastName)
+}
+func (s *student) updateLastName(value interface{}) {
+	tempLastNameVariable, stringValidation := value.(string)
+	if !stringValidation {
+		panic("Please enter Correct Last Name")
+	}
+	validateLastName(tempLastNameVariable)
+	s.lastName = tempLastNameVariable
+	s.fullName = getFullNameFromFirstAndLastName(s.firstName, s.lastName)
+}
+
+func (s *student) updateDateOfBirth(value interface{}) {
+	tempDateOfBirthVariable, stringValidation := value.(string)
+	if !stringValidation {
+		panic("Date of Birth should be a String")
+	}
+	validateDateOfBirth(tempDateOfBirthVariable)
+	s.dateOfBirth = tempDateOfBirthVariable
+	s.age = getAgeFromDOB(tempDateOfBirthVariable)
+}
+
+func (s *student) updateYearOfEnrollment(value interface{}) {
+	tempYearOfEnrollmentVariable, intValidation := value.(int)
+	if !intValidation {
+		panic("Year of Enrollment should be Integer")
+	}
+	validateYearOfPassingIsAfterYearOfEnrollment(tempYearOfEnrollmentVariable, s.yearOfPassing)
+	s.yearOfEnrollment = tempYearOfEnrollmentVariable
+}
+
+func (s *student) updateYearOfPassing(value interface{}) {
+	tempYearOfPassingVariable, intValidation := value.(int)
+	if !intValidation {
+		panic("Year of Passing should be Integer")
+	}
+	validateYearOfPassingIsAfterYearOfEnrollment(s.yearOfEnrollment, tempYearOfPassingVariable)
+	s.yearOfPassing = tempYearOfPassingVariable
+	s.numberOfYearsToGraduate = getNumberOfYearsToGraduateFromPassingYear(tempYearOfPassingVariable)
+
+}
+
+func (s *student) updateSemesterGrades(value interface{}) {
+	tempSemesterCPGAVariable, floatSliceValidation := value.([]float32)
+	if !floatSliceValidation {
+		panic("Invalid Array of CGPA")
+	}
+	var tempSemesterGradesVariable []string
+	validateAllCGPAs(tempSemesterCPGAVariable)
+	s.semesterCGPA = tempSemesterCPGAVariable
+	calculateSemesterGradesFromSemesterCGPA(tempSemesterCPGAVariable, &tempSemesterGradesVariable)
+	s.semesterGrades = tempSemesterGradesVariable
+
+	s.finalCGPA = calculateFinalCGPAFromSemesterCGPA(tempSemesterCPGAVariable)
+	s.finalGrade = getGradeFromCGPA(s.finalCGPA)
 }
