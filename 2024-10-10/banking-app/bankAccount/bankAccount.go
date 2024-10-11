@@ -10,6 +10,7 @@ type BankAccount struct {
 	balance       float64
 	bankId        int
 	customerId    int
+	isActive      bool
 }
 
 func NewBankAccount(
@@ -35,7 +36,14 @@ func NewBankAccount(
 }
 
 func (bankAccount *BankAccount) CloseBankAccount() (float64, error) {
-	return 0, nil
+	err := bankAccount.validateIfActive()
+	if err != nil {
+		return 0, err
+	}
+	bankAccount.isActive = false
+	tempBalance := bankAccount.balance
+	bankAccount.balance = 0
+	return tempBalance, nil
 }
 
 func (account *BankAccount) GetBalance() float64 {
@@ -55,6 +63,10 @@ func (account *BankAccount) GetBankId() int {
 }
 
 func (account *BankAccount) DepositMoney(depositAmount float64) error {
+	err1 := account.validateIfActive()
+	if err1 != nil {
+		return err1
+	}
 	err := validateDepositAmount(depositAmount)
 	if err != nil {
 		return err
@@ -66,7 +78,9 @@ func (account *BankAccount) DepositMoney(depositAmount float64) error {
 }
 
 func (account *BankAccount) WithdrawMoney(withdrawAmount float64) error {
+
 	err := helper.ValidateAll(
+		account.validateIfActive(),
 		validateWithdrawAmount(withdrawAmount),
 		account.validateIfBalanceToWithdraw(withdrawAmount))
 	if err != nil {
@@ -133,6 +147,13 @@ func validateWithdrawAmount(withdrawAmount float64) error {
 func (account *BankAccount) validateIfBalanceToWithdraw(withdrawAmount float64) error {
 	if account.GetBalance() < withdrawAmount {
 		return errors.New("Insufficient Balance to withdraw")
+	}
+	return nil
+}
+
+func (account *BankAccount) validateIfActive() error {
+	if !account.isActive {
+		return errors.New("Account Donot Exist")
 	}
 	return nil
 }
