@@ -31,6 +31,7 @@ func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
 		bankId:       bankIdCounter,
 		bankName:     bankName,
 		abbreviation: bankAbbreviation,
+		isActive:     true,
 		accounts:     tempEmptyAccounts,
 	}
 	allBanks = append(allBanks, tempBankObj)

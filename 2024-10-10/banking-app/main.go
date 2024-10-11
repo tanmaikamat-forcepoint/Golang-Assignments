@@ -11,8 +11,10 @@ func main() {
 	if err != nil {
 		panic(err2)
 	}
-	err3 := c1.CloseBankAccount(10, 10)
-	if err3 != nil {
-		panic(err3)
+	bk, _ := admin.NewBank("Ktk", "KTK")
+
+	_, err4 := c1.OpenNewBankAccount(bk.GetId())
+	if err4 != nil {
+		panic(err4)
 	}
 }
