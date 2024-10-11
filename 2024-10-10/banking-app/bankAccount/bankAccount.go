@@ -31,6 +31,7 @@ func NewBankAccount(
 		balance:       initialBalance,
 		customerId:    customerId,
 		bankId:        bankId,
+		isActive:      true,
 	}
 	return tempBankAccount, nil
 }

@@ -92,6 +92,10 @@ func (customer *Customer) depositMoney(accountNumber int, bankId int, amount flo
 
 }
 
+func (customer *Customer) getBalance() float64 {
+	return customer.totalBalance
+}
+
 func (customer *Customer) addNewBankAccountToList(account *bankAccount.BankAccount) {
 	customer.accounts = append(customer.accounts, account)
 }
@@ -121,7 +125,8 @@ func (customer *Customer) getAccountByNumber(accountNumber int, bankId int) (*ba
 //updates
 
 func (customer *Customer) addBalance(amount float64) {
-	customer.totalBalance += amount
+	finalBalance := customer.totalBalance + amount
+	customer.totalBalance = finalBalance
 }
 
 func (customer *Customer) subtractBalance(amount float64) {

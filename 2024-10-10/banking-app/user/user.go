@@ -125,6 +125,14 @@ func (user *User) DepositMoney(accountNumber int, bankId int, amount float64) er
 
 }
 
+func (user *User) GetTotalBalance() (float64, error) {
+	err := validateIfCustomer(user)
+	if err != nil {
+		return 0, err
+	}
+	return user.customer.getBalance(), nil
+}
+
 // validations
 
 func validateInputCustomerId(userId int) error {
