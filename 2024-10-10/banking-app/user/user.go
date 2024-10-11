@@ -1,6 +1,8 @@
 package user
 
 import (
+	"bankingApp/bank"
+	"bankingApp/bankAccount"
 	"bankingApp/helper"
 	"errors"
 )
@@ -39,10 +41,12 @@ func NewAdminUser(firstName, lastName string) (*User, error) {
 	return tempUserObject, nil
 }
 
-func NewCustomerUser(firstName, lastName string, customerParameters map[string]interface{}) (*User, error) {
+func (user *User) NewCustomerUser(firstName, lastName string, customerParameters map[string]interface{}) (*User, error) {
+
 	firstName = helper.RemoveAllLeadingAndTrailingSpaces(firstName)
 	lastName = helper.RemoveAllLeadingAndTrailingSpaces(lastName)
 	err := helper.ValidateAll(
+		validateIfAdmin(user),
 		validateFirstName(firstName),
 		validateLastName(lastName))
 	if err != nil {
@@ -57,6 +61,68 @@ func NewCustomerUser(firstName, lastName string, customerParameters map[string]i
 	}
 	userIdCounter++
 	return tempUserObject, nil
+}
+
+//admin functions
+
+func (user *User) NewBank(bankName string, abbrevation string) (*bank.Bank, error) {
+	err := validateIfAdmin(user)
+	if err != nil {
+		return nil, err
+	}
+	return bank.NewBank(bankName, abbrevation)
+}
+
+func (user *User) DeleteCustomer(userId int) (float64, error) {
+	err := validateIfAdmin(user)
+	if err != nil {
+		return 0, err
+	}
+	customerToDelete := allUsers[userId]
+	err2 := validateIfCustomer(customerToDelete)
+	if err2 != nil {
+		return 0, err2
+	}
+
+	return customerToDelete.customer.deleteCustomer()
+}
+
+//general
+
+func GetAllBanks() []*bank.Bank {
+	return bank.GetAllBanks()
+}
+
+// customer Functions
+func (user *User) OpenNewBankAccount(bankId int) (*bankAccount.BankAccount, error) {
+	err := validateIfCustomer(user)
+	if err != nil {
+		return nil, err
+	}
+	return user.customer.openNewBankAccount(bankId, user.userId)
+}
+func (user *User) CloseBankAccount(bankId int, accountNumber int) error {
+	err := validateIfCustomer(user)
+	if err != nil {
+		return err
+	}
+	return user.customer.closeBankAccount(bankId, user.userId, accountNumber)
+}
+
+func (user *User) WithdrawMoney(accountNumber int, bankId int, amount float64) error {
+	err := validateIfCustomer(user)
+	if err != nil {
+		return err
+	}
+	return user.customer.withdrawMoney(accountNumber, bankId, amount)
+}
+func (user *User) DepositMoney(accountNumber int, bankId int, amount float64) error {
+	err := validateIfCustomer(user)
+	if err != nil {
+		return err
+	}
+	return user.customer.depositMoney(accountNumber, bankId, amount)
+
 }
 
 // validations
