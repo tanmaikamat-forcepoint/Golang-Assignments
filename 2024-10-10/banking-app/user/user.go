@@ -41,7 +41,7 @@ func NewAdminUser(firstName, lastName string) (*User, error) {
 	return tempUserObject, nil
 }
 
-func (user *User) NewCustomerUser(firstName, lastName string, customerParameters map[string]interface{}) (*User, error) {
+func (user *User) NewCustomerUser(firstName, lastName string, customerParameters ...interface{}) (*User, error) {
 
 	firstName = helper.RemoveAllLeadingAndTrailingSpaces(firstName)
 	lastName = helper.RemoveAllLeadingAndTrailingSpaces(lastName)
@@ -54,7 +54,7 @@ func (user *User) NewCustomerUser(firstName, lastName string, customerParameters
 	}
 	tempUserObject := &User{
 		userId:    userIdCounter,
-		isAdmin:   true,
+		isAdmin:   false,
 		firstName: firstName,
 		lastName:  lastName,
 		customer:  newCustomer(customerParameters),

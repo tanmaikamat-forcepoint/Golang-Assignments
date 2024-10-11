@@ -12,7 +12,7 @@ type Customer struct {
 	accounts     []*bankAccount.BankAccount
 }
 
-func newCustomer(customerParameters map[string]interface{}) *Customer {
+func newCustomer(customerParameters []interface{}) *Customer {
 
 	var tempEmptyAccounts []*bankAccount.BankAccount
 	return &Customer{
