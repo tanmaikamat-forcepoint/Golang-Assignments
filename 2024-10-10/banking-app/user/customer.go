@@ -97,9 +97,9 @@ func (customer *Customer) addNewBankAccountToList(account *bankAccount.BankAccou
 }
 
 func (customer *Customer) removeBankAccountFromList(bankId int, accountNumber int) {
-	index = -1
+	index := -1
 	for i, account := range customer.accounts {
-		if accountNumber == accountToBeDeleted.GetAccountNumber() && bankId == accountToBeDeleted.GetBankId() {
+		if accountNumber == account.GetAccountNumber() && bankId == account.GetBankId() {
 			index = i
 		}
 	}
