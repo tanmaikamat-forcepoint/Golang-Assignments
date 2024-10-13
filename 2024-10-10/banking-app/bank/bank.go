@@ -86,8 +86,12 @@ func (bank *Bank) GetBankBalance() float64 {
 	return bank.ledger.getCurrentBalance()
 }
 
-func (bank *Bank) GetBalanceEntryForBankId(bankId int) float64 {
-	return bank.ledger.getBalanceEntryForBankId(bankId)
+func (bank *Bank) GetBalanceEntryForBankId(bankId int) (float64, error) {
+	err := validateBankId(bankId)
+	if err != nil {
+		return 0, err
+	}
+	return bank.ledger.getBalanceEntryForBankId(bankId), nil
 }
 
 // getters
