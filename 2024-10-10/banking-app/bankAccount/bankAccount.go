@@ -3,6 +3,7 @@ package bankAccount
 import (
 	"bankingApp/helper"
 	"errors"
+	"strconv"
 )
 
 type BankAccount struct {
@@ -11,6 +12,7 @@ type BankAccount struct {
 	bankId        int
 	customerId    int
 	isActive      bool
+	passbook      *Passbook
 }
 
 func NewBankAccount(
@@ -26,13 +28,16 @@ func NewBankAccount(
 	if err != nil {
 		return nil, err
 	}
+	tempPassBook := newPassBook(accountNumber)
 	tempBankAccount := &BankAccount{
 		accountNumber: accountNumber,
 		balance:       initialBalance,
 		customerId:    customerId,
 		bankId:        bankId,
 		isActive:      true,
+		passbook:      tempPassBook,
 	}
+	tempPassBook.addNewDepositToPassbook(initialBalance, tempBankAccount.GetBalance(), "Initial Balance")
 	return tempBankAccount, nil
 }
 
@@ -63,6 +68,10 @@ func (account *BankAccount) GetBankId() int {
 	return account.bankId
 }
 
+func (account *BankAccount) GetPassbook() *Passbook {
+	return account.passbook
+}
+
 func (account *BankAccount) DepositMoney(depositAmount float64) error {
 	err1 := account.validateIfActive()
 	if err1 != nil {
@@ -72,7 +81,9 @@ func (account *BankAccount) DepositMoney(depositAmount float64) error {
 	if err != nil {
 		return err
 	}
+	tempNote := "Deposit Money at XYZ"
 	account.creditToBalance(depositAmount)
+	account.passbook.addNewDepositToPassbook(depositAmount, account.GetBalance(), tempNote)
 
 	return nil
 
@@ -88,6 +99,56 @@ func (account *BankAccount) WithdrawMoney(withdrawAmount float64) error {
 		return err
 	}
 	account.debitFromBalance(withdrawAmount)
+	tempNote := "Amount Withdraw at XYZ"
+
+	account.passbook.addNewWithdrawToPassbook(withdrawAmount, account.GetBalance(), tempNote)
+
+	return nil
+
+}
+
+func (account *BankAccount) InitiateTransferMoneyTo(transferAmount float64, accountNumber int, bankId int, note string) (int, error) {
+
+	err := helper.ValidateAll(
+		account.validateIfActive(),
+		validateWithdrawAmount(transferAmount),
+		account.validateIfBalanceToWithdraw(transferAmount))
+	if err != nil {
+		return -1, err
+	}
+
+	account.debitFromBalance(transferAmount)
+	transactionId := account.passbook.addNewTransferToPassbook(transferAmount, account.GetBalance(), DEBIT_ENTRY, bankId, accountNumber, note)
+	return transactionId, nil
+
+}
+
+func (account *BankAccount) RefundUnsuccessfulTransfer(transactionId int) error {
+
+	err1 := account.validateIfActive()
+	if err1 != nil {
+		panic(err1)
+	}
+	tempTransaction := account.passbook.getTransactionById(transactionId)
+
+	account.creditToBalance(tempTransaction.transactionAmount)
+	account.passbook.addNewDepositToPassbook(tempTransaction.transactionAmount, account.GetBalance(), "Transaction UnSuccessful : "+strconv.Itoa(transactionId))
+	return nil
+
+}
+
+func (account *BankAccount) TransferMoneyFrom(transferAmount float64, accountNumberFromWhichTransferInitiated int, bankIdFromWhichTransferInitiated int, note string) error {
+
+	err1 := account.validateIfActive()
+	if err1 != nil {
+		return err1
+	}
+	err := validateDepositAmount(transferAmount)
+	if err != nil {
+		return err
+	}
+	account.creditToBalance(transferAmount)
+	account.passbook.addNewTransferToPassbook(transferAmount, account.GetBalance(), CREDIT_ENTRY, bankIdFromWhichTransferInitiated, accountNumberFromWhichTransferInitiated, note)
 
 	return nil
 

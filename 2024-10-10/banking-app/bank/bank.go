@@ -48,6 +48,7 @@ func (bank *Bank) OpenNewBankAccount(customerId int) (*bankAccount.BankAccount, 
 	if err != nil {
 		return nil, err
 	}
+	bank.accounts = append(bank.accounts, tempBankAccount)
 	return tempBankAccount, nil
 
 }
@@ -92,6 +93,17 @@ func GetBankById(bankId int) (*Bank, error) {
 		}
 	}
 	return nil, errors.New("Bank Not Found")
+}
+
+func (bank *Bank) TransferMoneyFrom(accountNumberTo int, bankIdTo int, amount float64, accountNumberFrom int, bankIdFrom int, note string) error {
+	bankAccount, err := bank.getBankAccountByNumber(accountNumberTo)
+	if err != nil {
+		return err
+	}
+
+	err2 := bankAccount.TransferMoneyFrom(amount, accountNumberFrom, bankIdFrom, note)
+
+	return err2
 }
 
 func (bank *Bank) GetId() int {

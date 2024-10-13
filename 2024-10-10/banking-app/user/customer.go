@@ -92,6 +92,36 @@ func (customer *Customer) depositMoney(accountNumber int, bankId int, amount flo
 
 }
 
+func (customer *Customer) transferMoney(accountNumberFrom int, bankIdFrom int, amount float64, accountNumberTo int, bankIdTo int, note string) error {
+	err1 := validateAccountNumber(accountNumberFrom)
+
+	if err1 != nil {
+		return err1
+	}
+
+	account, err := customer.getAccountByNumber(accountNumberFrom, bankIdFrom)
+	if err != nil {
+		return err
+	}
+	bank, errx := bank.GetBankById(bankIdTo)
+	if errx != nil {
+		return errx
+	}
+	transactionId, err2 := account.InitiateTransferMoneyTo(amount, accountNumberTo, bankIdTo, note)
+	if err2 != nil {
+		return err2
+	}
+
+	err3 := bank.TransferMoneyFrom(accountNumberTo, bankIdTo, amount, accountNumberFrom, bankIdFrom, note)
+	if err3 != nil {
+		account.RefundUnsuccessfulTransfer(transactionId)
+		return err3
+	}
+	customer.addBalance(amount)
+	return err2
+
+}
+
 func (customer *Customer) getBalance() float64 {
 	return customer.totalBalance
 }
