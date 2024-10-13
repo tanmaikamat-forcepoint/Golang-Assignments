@@ -15,6 +15,7 @@ type Bank struct {
 	bankName     string
 	abbreviation string
 	accounts     []*bankAccount.BankAccount
+	ledger       *Ledger
 }
 
 func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
@@ -26,6 +27,7 @@ func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
 	if err != nil {
 		return nil, err
 	}
+	tempLedgerObject := newLedger()
 	var tempEmptyAccounts []*bankAccount.BankAccount
 	tempBankObj := &Bank{
 		bankId:       bankIdCounter,
@@ -33,6 +35,7 @@ func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
 		abbreviation: bankAbbreviation,
 		isActive:     true,
 		accounts:     tempEmptyAccounts,
+		ledger:       tempLedgerObject,
 	}
 	allBanks = append(allBanks, tempBankObj)
 	bankIdCounter++
@@ -66,6 +69,25 @@ func (bank *Bank) CloseBankAccount(accountNumber int, customerId int) (float64, 
 	balance, err2 := bankAccount.CloseBankAccount()
 
 	return balance, err2
+}
+
+func (bank *Bank) SendMoneyToAnotherBank(receiverBank *Bank, amount float64) error {
+	err := validateIfAmountIsGreaterThanZero(amount)
+	if err != nil {
+		return err
+	}
+	bank.ledger.debitBalanceTo(receiverBank.bankId, amount)
+	receiverBank.ledger.creditBalanceFrom(bank.bankId, amount)
+	return nil
+
+}
+
+func (bank *Bank) GetBankBalance() float64 {
+	return bank.ledger.getCurrentBalance()
+}
+
+func (bank *Bank) GetBalanceEntryForBankId(bankId int) float64 {
+	return bank.ledger.getBalanceEntryForBankId(bankId)
 }
 
 // getters
@@ -157,6 +179,13 @@ func validateBankAbbreviation(abbreviation string) error {
 func validateIfCustomerHasAccessToBankAccount(account *bankAccount.BankAccount, customerId int) error {
 	if account.GetCustomerId() != customerId {
 		return errors.New("Your are Not Authorized For this Action")
+	}
+	return nil
+}
+
+func validateIfAmountIsGreaterThanZero(amount float64) error {
+	if amount < 0 {
+		return errors.New("Amount Cannot be Negative")
 	}
 	return nil
 }

@@ -3,6 +3,7 @@ package user
 import (
 	"bankingApp/bank"
 	"bankingApp/bankAccount"
+	"bankingApp/helper"
 	"errors"
 	"slices"
 )
@@ -93,7 +94,9 @@ func (customer *Customer) depositMoney(accountNumber int, bankId int, amount flo
 }
 
 func (customer *Customer) transferMoney(accountNumberFrom int, bankIdFrom int, amount float64, accountNumberTo int, bankIdTo int, note string) error {
-	err1 := validateAccountNumber(accountNumberFrom)
+	err1 := helper.ValidateAll(
+		validateAccountNumber(accountNumberFrom),
+		validateIfAccountNumberSame(accountNumberFrom, accountNumberTo, bankIdFrom, bankIdTo))
 
 	if err1 != nil {
 		return err1
@@ -152,6 +155,22 @@ func (customer *Customer) getAccountByNumber(accountNumber int, bankId int) (*ba
 	return nil, errors.New("Account Not Found")
 }
 
+func (customer *Customer) GetPassBookByAccountNumber(accountNumber int, bankId int) (*bankAccount.Passbook, error) {
+	err := helper.ValidateAll(
+		validateAccountNumber(accountNumber),
+		validateBankId(bankId))
+
+	if err != nil {
+		return nil, err
+	}
+	for _, account := range customer.accounts {
+		if account.GetAccountNumber() == accountNumber && account.GetBankId() == bankId {
+			return account.GetPassbook(), nil
+		}
+	}
+	return nil, errors.New("Account Not Found")
+}
+
 //updates
 
 func (customer *Customer) addBalance(amount float64) {
@@ -168,6 +187,19 @@ func (customer *Customer) subtractBalance(amount float64) {
 func validateAccountNumber(accountNumber int) error {
 	if accountNumber < 0 {
 		return errors.New("invalid Account Number")
+	}
+	return nil
+}
+
+func validateIfAccountNumberSame(accountNumber1, accountNumber2, bankId1, bankId2 int) error {
+	if accountNumber1 == accountNumber2 && bankId1 == bankId2 {
+		return errors.New("Cannot Use Same Account For Transfer")
+	}
+	return nil
+}
+func validateBankId(bankId int) error {
+	if bankId < 0 {
+		return errors.New("invalid Bank Id")
 	}
 	return nil
 }
