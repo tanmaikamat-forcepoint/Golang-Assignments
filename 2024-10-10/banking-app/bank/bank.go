@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-var allBanks []*Bank
+var allBanks []BankInterface
 var bankIdCounter = 0
 
 // Interface For Bank with Other Class as Bank Implementation -> This Helps to Utilises DIP
@@ -18,8 +18,11 @@ type BankInterface interface {
 	SendMoneyToAnotherBank(receiverBank *Bank, amount float64) error
 	GetBankBalance() float64
 	GetBalanceEntryForBankId(bankId int) (float64, error)
+	TransferMoneyFrom(accountNumberTo int, bankIdTo int, amount float64, accountNumberFrom int, bankIdFrom int, note string) error
 	GetId() int
+	IsBankActive() bool
 }
+
 type Bank struct {
 	bankId       int
 	isActive     bool
@@ -27,6 +30,11 @@ type Bank struct {
 	abbreviation string
 	accounts     []bankAccount.BankAccountInterface
 	ledger       *Ledger
+}
+
+type BankOnline struct {
+	*Bank
+	onlineData string
 }
 
 func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
@@ -118,7 +126,7 @@ func GetAllBanks() []BankInterface {
 	return tempBankArray
 }
 
-func GetBankById(bankId int) (*Bank, error) {
+func GetBankById(bankId int) (BankInterface, error) {
 	err := validateBankId(bankId)
 	if err != nil {
 		return nil, err
