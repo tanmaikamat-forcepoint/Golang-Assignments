@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bankingApp/bank"
 	"bankingApp/user"
 	"fmt"
 )
@@ -18,8 +17,6 @@ func (c *Circle) abc() {
 
 func main() {
 
-	var tempBank bank.BankInterface
-	tempBank := bank.NewBank("Xyz", "Abc")
 	admin, err := user.NewAdminUser("Amdin", "Amind")
 	if err != nil {
 		panic(err)
