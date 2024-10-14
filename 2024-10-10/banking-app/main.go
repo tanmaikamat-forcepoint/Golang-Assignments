@@ -40,7 +40,7 @@ func main() {
 	acc2, err5 := c2.OpenNewBankAccount(bk.GetId())
 	fmt.Println(c2.GetTotalBalance())
 
-	errx := c1.TransferMoneyTo(acc.GetAccountNumber(), acc.GetBankId(), 100, acc.GetAccountNumber(), acc.GetBankId(), "Transfer from First account to second")
+	errx := c1.TransferMoneyTo(acc.GetAccountNumber(), acc.GetBankId(), 100, acc2.GetAccountNumber(), acc2.GetBankId(), "Transfer from First account to second")
 	if errx != nil {
 		panic(errx)
 	}

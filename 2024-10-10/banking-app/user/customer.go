@@ -10,12 +10,12 @@ import (
 
 type Customer struct {
 	totalBalance float64
-	accounts     []*bankAccount.BankAccount
+	accounts     []bankAccount.BankAccountInterface
 }
 
 func newCustomer(customerParameters []interface{}) *Customer {
 
-	var tempEmptyAccounts []*bankAccount.BankAccount
+	var tempEmptyAccounts []bankAccount.BankAccountInterface
 	return &Customer{
 		totalBalance: 0,
 		accounts:     tempEmptyAccounts,
@@ -33,7 +33,7 @@ func (customer *Customer) deleteCustomer() (float64, error) {
 	return tempBalance, nil
 }
 
-func (customer *Customer) openNewBankAccount(bankId int, userId int) (*bankAccount.BankAccount, error) {
+func (customer *Customer) openNewBankAccount(bankId int, userId int) (bankAccount.BankAccountInterface, error) {
 	bnk, err := bank.GetBankById(bankId)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (customer *Customer) getBalance() float64 {
 	return customer.totalBalance
 }
 
-func (customer *Customer) addNewBankAccountToList(account *bankAccount.BankAccount) {
+func (customer *Customer) addNewBankAccountToList(account bankAccount.BankAccountInterface) {
 	customer.accounts = append(customer.accounts, account)
 }
 
@@ -146,7 +146,7 @@ func (customer *Customer) removeBankAccountFromList(bankId int, accountNumber in
 
 }
 
-func (customer *Customer) getAccountByNumber(accountNumber int, bankId int) (*bankAccount.BankAccount, error) {
+func (customer *Customer) getAccountByNumber(accountNumber int, bankId int) (bankAccount.BankAccountInterface, error) {
 	for _, account := range customer.accounts {
 		if account.GetAccountNumber() == accountNumber && account.GetBankId() == bankId {
 			return account, nil

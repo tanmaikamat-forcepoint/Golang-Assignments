@@ -10,6 +10,24 @@ import (
 var allUsers []*User
 var userIdCounter = 0
 
+type AdminInterface interface {
+	NewCustomerUser(firstName, lastName string, customerParameters ...interface{}) (*User, error)
+	DeleteCustomer(userId int) (float64, error)
+	GetUserById(userId int)
+	NewBank(bankName string, abbrevation string) (*bank.BankInterface, error)
+	GetAllBanks() []*bank.BankInterface
+}
+
+type StaffInterface interface {
+	OpenNewBankAccount(bankId int) (bankAccount.BankAccountInterface, error)
+	CloseBankAccount(bankId int, accountNumber int) error
+	DepositMoney(accountNumber int, bankId int, amount float64) error
+	WithdrawMoney(accountNumber int, bankId int, amount float64) error
+	TransferMoneyTo(accountNumberFrom int, bankIdFrom int, amount float64, accountNumberTo int, bankIdTo int, note string) error
+	GetTotalBalance() (float64, error)
+	GetFullName() string
+	GetUserId() int
+}
 type User struct {
 	userId    int
 	isAdmin   bool
@@ -17,8 +35,6 @@ type User struct {
 	lastName  string
 	customer  *Customer
 }
-
-//Factory
 
 func NewAdminUser(firstName, lastName string) (*User, error) {
 	firstName = helper.RemoveAllLeadingAndTrailingSpaces(firstName)
@@ -41,6 +57,7 @@ func NewAdminUser(firstName, lastName string) (*User, error) {
 	return tempUserObject, nil
 }
 
+// Admin Function
 func (user *User) NewCustomerUser(firstName, lastName string, customerParameters ...interface{}) (*User, error) {
 
 	firstName = helper.RemoveAllLeadingAndTrailingSpaces(firstName)
@@ -65,7 +82,8 @@ func (user *User) NewCustomerUser(firstName, lastName string, customerParameters
 
 //admin functions
 
-func (user *User) NewBank(bankName string, abbrevation string) (*bank.Bank, error) {
+// Admin Function
+func (user *User) NewBank(bankName string, abbrevation string) (bank.BankInterface, error) {
 	err := validateIfAdmin(user)
 	if err != nil {
 		return nil, err
@@ -73,6 +91,7 @@ func (user *User) NewBank(bankName string, abbrevation string) (*bank.Bank, erro
 	return bank.NewBank(bankName, abbrevation)
 }
 
+// Admin Function
 func (user *User) DeleteCustomer(userId int) (float64, error) {
 	err := validateIfAdmin(user)
 	if err != nil {
@@ -87,20 +106,22 @@ func (user *User) DeleteCustomer(userId int) (float64, error) {
 	return customerToDelete.customer.deleteCustomer()
 }
 
-//general
-
-func GetAllBanks() []*bank.Bank {
+// general
+func GetAllBanks() []bank.BankInterface {
 	return bank.GetAllBanks()
 }
 
 // customer Functions
-func (user *User) OpenNewBankAccount(bankId int) (*bankAccount.BankAccount, error) {
+// staff function
+func (user *User) OpenNewBankAccount(bankId int) (bankAccount.BankAccountInterface, error) {
 	err := validateIfCustomer(user)
 	if err != nil {
 		return nil, err
 	}
 	return user.customer.openNewBankAccount(bankId, user.userId)
 }
+
+// staff function
 func (user *User) CloseBankAccount(bankId int, accountNumber int) error {
 	err := validateIfCustomer(user)
 	if err != nil {
@@ -165,14 +186,16 @@ func validateLastName(lastName string) error {
 
 func validateIfAdmin(user *User) error {
 
-	if !user.IsUserAdmin() {
+	if !user.isUserAdmin() {
 		return errors.New("unauthoried Access")
 	}
 	return nil
 }
+
+// TODO : isStaff ->SRP
 func validateIfCustomer(user *User) error {
 
-	if user.IsUserAdmin() {
+	if user.isUserAdmin() {
 		return errors.New("Only Customers can access this")
 	}
 	return nil
@@ -182,7 +205,7 @@ func validateIfCustomer(user *User) error {
 func (user *User) GetUserId() int {
 	return user.userId
 }
-func (user *User) IsUserAdmin() bool {
+func (user *User) isUserAdmin() bool {
 	return user.isAdmin
 }
 func (user *User) GetFullName() string {

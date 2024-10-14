@@ -6,7 +6,21 @@ import (
 	"strconv"
 )
 
-type BankAccount struct {
+type BankAccountInterface interface {
+	CloseBankAccount() (float64, error)
+	GetBalance() float64
+	GetAccountNumber() int
+	GetBankId() int
+	GetCustomerId() int
+	GetPassbook() *Passbook
+	DepositMoney(depositAmount float64) error
+	WithdrawMoney(withdrawAmount float64) error
+	InitiateTransferMoneyTo(transferAmount float64, accountNumber int, bankId int, note string) (int, error)
+	RefundUnsuccessfulTransfer(transactionId int) error
+	TransferMoneyFrom(transferAmount float64, accountNumberFromWhichTransferInitiated int, bankIdFromWhichTransferInitiated int, note string) error
+}
+
+type bankAccount struct {
 	accountNumber int
 	balance       float64
 	bankId        int
@@ -19,7 +33,7 @@ func NewBankAccount(
 	accountNumber int,
 	customerId int,
 	initialBalance float64,
-	bankId int) (*BankAccount, error) {
+	bankId int) (*bankAccount, error) {
 
 	err := helper.ValidateAll(
 		validateBankId(bankId),
@@ -29,7 +43,7 @@ func NewBankAccount(
 		return nil, err
 	}
 	tempPassBook := newPassBook(accountNumber)
-	tempBankAccount := &BankAccount{
+	tempBankAccount := &bankAccount{
 		accountNumber: accountNumber,
 		balance:       initialBalance,
 		customerId:    customerId,
@@ -41,7 +55,7 @@ func NewBankAccount(
 	return tempBankAccount, nil
 }
 
-func (bankAccount *BankAccount) CloseBankAccount() (float64, error) {
+func (bankAccount *bankAccount) CloseBankAccount() (float64, error) {
 	err := bankAccount.validateIfActive()
 	if err != nil {
 		return 0, err
@@ -52,27 +66,27 @@ func (bankAccount *BankAccount) CloseBankAccount() (float64, error) {
 	return tempBalance, nil
 }
 
-func (account *BankAccount) GetBalance() float64 {
+func (account *bankAccount) GetBalance() float64 {
 	return account.balance
 }
 
-func (account *BankAccount) GetAccountNumber() int {
+func (account *bankAccount) GetAccountNumber() int {
 	return account.accountNumber
 }
 
-func (account *BankAccount) GetCustomerId() int {
+func (account *bankAccount) GetCustomerId() int {
 	return account.customerId
 }
 
-func (account *BankAccount) GetBankId() int {
+func (account *bankAccount) GetBankId() int {
 	return account.bankId
 }
 
-func (account *BankAccount) GetPassbook() *Passbook {
+func (account *bankAccount) GetPassbook() *Passbook {
 	return account.passbook
 }
 
-func (account *BankAccount) DepositMoney(depositAmount float64) error {
+func (account *bankAccount) DepositMoney(depositAmount float64) error {
 	err1 := account.validateIfActive()
 	if err1 != nil {
 		return err1
@@ -89,7 +103,7 @@ func (account *BankAccount) DepositMoney(depositAmount float64) error {
 
 }
 
-func (account *BankAccount) WithdrawMoney(withdrawAmount float64) error {
+func (account *bankAccount) WithdrawMoney(withdrawAmount float64) error {
 
 	err := helper.ValidateAll(
 		account.validateIfActive(),
@@ -107,7 +121,7 @@ func (account *BankAccount) WithdrawMoney(withdrawAmount float64) error {
 
 }
 
-func (account *BankAccount) InitiateTransferMoneyTo(transferAmount float64, accountNumber int, bankId int, note string) (int, error) {
+func (account *bankAccount) InitiateTransferMoneyTo(transferAmount float64, accountNumber int, bankId int, note string) (int, error) {
 
 	err := helper.ValidateAll(
 		account.validateIfActive(),
@@ -123,7 +137,7 @@ func (account *BankAccount) InitiateTransferMoneyTo(transferAmount float64, acco
 
 }
 
-func (account *BankAccount) RefundUnsuccessfulTransfer(transactionId int) error {
+func (account *bankAccount) RefundUnsuccessfulTransfer(transactionId int) error {
 
 	err1 := account.validateIfActive()
 	if err1 != nil {
@@ -137,7 +151,7 @@ func (account *BankAccount) RefundUnsuccessfulTransfer(transactionId int) error 
 
 }
 
-func (account *BankAccount) TransferMoneyFrom(transferAmount float64, accountNumberFromWhichTransferInitiated int, bankIdFromWhichTransferInitiated int, note string) error {
+func (account *bankAccount) TransferMoneyFrom(transferAmount float64, accountNumberFromWhichTransferInitiated int, bankIdFromWhichTransferInitiated int, note string) error {
 
 	err1 := account.validateIfActive()
 	if err1 != nil {
@@ -156,12 +170,12 @@ func (account *BankAccount) TransferMoneyFrom(transferAmount float64, accountNum
 
 // private Functions
 
-func (account *BankAccount) creditToBalance(depositAmount float64) {
+func (account *bankAccount) creditToBalance(depositAmount float64) {
 	newBalance := account.GetBalance() + depositAmount
 	account.balance = newBalance
 }
 
-func (account *BankAccount) debitFromBalance(withdrawalAmount float64) {
+func (account *bankAccount) debitFromBalance(withdrawalAmount float64) {
 	newBalance := account.GetBalance() - withdrawalAmount
 	account.balance = newBalance
 }
@@ -206,14 +220,14 @@ func validateWithdrawAmount(withdrawAmount float64) error {
 	return nil
 }
 
-func (account *BankAccount) validateIfBalanceToWithdraw(withdrawAmount float64) error {
+func (account *bankAccount) validateIfBalanceToWithdraw(withdrawAmount float64) error {
 	if account.GetBalance() < withdrawAmount {
 		return errors.New("Insufficient Balance to withdraw")
 	}
 	return nil
 }
 
-func (account *BankAccount) validateIfActive() error {
+func (account *bankAccount) validateIfActive() error {
 	if !account.isActive {
 		return errors.New("Account Donot Exist")
 	}

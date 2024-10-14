@@ -9,12 +9,23 @@ import (
 var allBanks []*Bank
 var bankIdCounter = 0
 
+// Interface For Bank with Other Class as Bank Implementation -> This Helps to Utilises DIP
+// TODO: bank with ledger was to be composed
+
+type BankInterface interface {
+	OpenNewBankAccount(customerId int) (bankAccount.BankAccountInterface, error)
+	CloseBankAccount(accountNumber int, customerId int) (float64, error)
+	SendMoneyToAnotherBank(receiverBank *Bank, amount float64) error
+	GetBankBalance() float64
+	GetBalanceEntryForBankId(bankId int) (float64, error)
+	GetId() int
+}
 type Bank struct {
 	bankId       int
 	isActive     bool
 	bankName     string
 	abbreviation string
-	accounts     []*bankAccount.BankAccount
+	accounts     []bankAccount.BankAccountInterface
 	ledger       *Ledger
 }
 
@@ -28,7 +39,7 @@ func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
 		return nil, err
 	}
 	tempLedgerObject := newLedger()
-	var tempEmptyAccounts []*bankAccount.BankAccount
+	var tempEmptyAccounts []bankAccount.BankAccountInterface
 	tempBankObj := &Bank{
 		bankId:       bankIdCounter,
 		bankName:     bankName,
@@ -43,9 +54,10 @@ func NewBank(bankName string, bankAbbreviation string) (*Bank, error) {
 }
 
 // functions
-func (bank *Bank) OpenNewBankAccount(customerId int) (*bankAccount.BankAccount, error) {
+func (bank *Bank) OpenNewBankAccount(customerId int) (bankAccount.BankAccountInterface, error) {
 
 	nextAccountNumber := bank.getNextAccountNumber()
+	var tempBankAccount bankAccount.BankAccountInterface
 
 	tempBankAccount, err := bankAccount.NewBankAccount(nextAccountNumber, customerId, 1000, bank.bankId)
 	if err != nil {
@@ -95,8 +107,8 @@ func (bank *Bank) GetBalanceEntryForBankId(bankId int) (float64, error) {
 }
 
 // getters
-func GetAllBanks() []*Bank {
-	var tempBankArray []*Bank
+func GetAllBanks() []BankInterface {
+	var tempBankArray []BankInterface
 	for _, bank := range allBanks {
 		if !bank.IsBankActive() {
 			continue
@@ -105,6 +117,7 @@ func GetAllBanks() []*Bank {
 	}
 	return tempBankArray
 }
+
 func GetBankById(bankId int) (*Bank, error) {
 	err := validateBankId(bankId)
 	if err != nil {
@@ -127,7 +140,7 @@ func (bank *Bank) TransferMoneyFrom(accountNumberTo int, bankIdTo int, amount fl
 		return err
 	}
 
-	err2 := bankAccount.TransferMoneyFrom(amount, accountNumberFrom, bankIdFrom, note)
+	err2 := (bankAccount).TransferMoneyFrom(amount, accountNumberFrom, bankIdFrom, note)
 
 	return err2
 }
@@ -136,7 +149,7 @@ func (bank *Bank) GetId() int {
 	return bank.bankId
 }
 
-func (bank *Bank) getBankAccountByNumber(accountNumber int) (*bankAccount.BankAccount, error) {
+func (bank *Bank) getBankAccountByNumber(accountNumber int) (bankAccount.BankAccountInterface, error) {
 	for _, bankAccount := range bank.getAllBankAccountsForTheBank() {
 		if bankAccount.GetAccountNumber() == accountNumber {
 			return bankAccount, nil
@@ -146,7 +159,7 @@ func (bank *Bank) getBankAccountByNumber(accountNumber int) (*bankAccount.BankAc
 
 }
 
-func (bank *Bank) getAllBankAccountsForTheBank() []*bankAccount.BankAccount {
+func (bank *Bank) getAllBankAccountsForTheBank() []bankAccount.BankAccountInterface {
 	return bank.accounts
 }
 func (b *Bank) getNextAccountNumber() int {
@@ -180,7 +193,7 @@ func validateBankAbbreviation(abbreviation string) error {
 	return nil
 }
 
-func validateIfCustomerHasAccessToBankAccount(account *bankAccount.BankAccount, customerId int) error {
+func validateIfCustomerHasAccessToBankAccount(account bankAccount.BankAccountInterface, customerId int) error {
 	if account.GetCustomerId() != customerId {
 		return errors.New("Your are Not Authorized For this Action")
 	}
