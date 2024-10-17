@@ -7,7 +7,7 @@ import (
 )
 
 var allBanks []BankInterface
-var bankIdCounter = 0
+var bankIdCounter = 1
 
 // Interface For Bank with Other Class as Bank Implementation -> This Helps to Utilises DIP
 // TODO: bank with ledger was to be composed
@@ -20,13 +20,19 @@ type BankInterface interface {
 	GetBalanceEntryForBankId(bankId int) (float64, error)
 	TransferMoneyFrom(accountNumberTo int, bankIdTo int, amount float64, accountNumberFrom int, bankIdFrom int, note string) error
 	GetId() int
+	GetName() string
+	GetAbbreviation() string
+	GetIsActive() bool
+	DeleteSelf() error
+
 	IsBankActive() bool
+	GetBankObj() *Bank
 }
 
 type Bank struct {
-	bankId       int
-	isActive     bool
-	bankName     string
+	bankId       int    `json:"bankId"`
+	isActive     bool   `json:"isActive"`
+	bankName     string `json:"bankName"`
 	abbreviation string
 	accounts     []bankAccount.BankAccountInterface
 	ledger       *Ledger
@@ -74,6 +80,20 @@ func (bank *Bank) OpenNewBankAccount(customerId int) (bankAccount.BankAccountInt
 	bank.accounts = append(bank.accounts, tempBankAccount)
 	return tempBankAccount, nil
 
+}
+
+func (bank *Bank) DeleteSelf() error {
+	if !bank.isActive {
+		return errors.New("Bank Already Deleted")
+	}
+	for _, account := range bank.accounts {
+		account.CloseBankAccount()
+	}
+	bank.isActive = false
+	return nil
+}
+func (bank *Bank) GetBankObj() *Bank {
+	return bank
 }
 
 func (bank *Bank) CloseBankAccount(accountNumber int, customerId int) (float64, error) {
@@ -141,6 +161,18 @@ func GetBankById(bankId int) (BankInterface, error) {
 	}
 	return nil, errors.New("Bank Not Found")
 }
+
+func (bank *Bank) GetIsActive() bool {
+	return bank.isActive
+}
+func (bank *Bank) GetName() string {
+	return bank.bankName
+}
+func (bank *Bank) GetAbbreviation() string {
+	return bank.abbreviation
+}
+
+//functions
 
 func (bank *Bank) TransferMoneyFrom(accountNumberTo int, bankIdTo int, amount float64, accountNumberFrom int, bankIdFrom int, note string) error {
 	bankAccount, err := bank.getBankAccountByNumber(accountNumberTo)

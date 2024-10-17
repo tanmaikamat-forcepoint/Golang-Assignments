@@ -1,8 +1,15 @@
 package main
 
 import (
-	"bankingApp/user"
+	"bankingApp/helper"
+	"bankingApp/routers"
+	userController "bankingApp/user/controller"
+	user "bankingApp/user/service"
 	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Shape interface {
@@ -15,52 +22,43 @@ func (c *Circle) abc() {
 
 }
 
+var logger *log.Logger
+
 func main() {
 
-	admin, err := user.NewAdminUser("Amdin", "Amind")
-	if err != nil {
-		panic(err)
-	}
-	c1, err2 := admin.NewCustomerUser("Tanmie", "Kamat")
-	if err != nil {
-		panic(err2)
-	}
-	c2, err2 := admin.NewCustomerUser("Ash", "Kamat")
-	if err != nil {
-		panic(err2)
-	}
-	bk, _ := admin.NewBank("Ktk", "KTK")
+	logger = log.New(log.Default().Writer(), "=============================================================\nLOG:", 0)
+	user.NewAdminUserWithIdPass("Test", "Test", "Test", "TestTest")
+	mainRouter := mux.NewRouter().PathPrefix("/api/v1").Subrouter()
+	mainRouter.HandleFunc("/login", userController.LoginUser).Methods(http.MethodPost)
+	routers.RegisterCusomterRouter(mainRouter)
+	routers.RegisterBankRouter(mainRouter)
 
-	acc, err4 := c1.OpenNewBankAccount(bk.GetId())
-	fmt.Println(c1.GetTotalBalance())
-	err6 := c1.DepositMoney(acc.GetAccountNumber(), acc.GetBankId(), 152)
-	if err6 != nil {
-		panic(err6)
-	}
+	http.ListenAndServe(":4000", ErrorHandlerMiddleware(LoggerMiddleware(mainRouter)))
 
-	fmt.Println(c1.GetTotalBalance())
-	err7 := c1.WithdrawMoney(acc.GetAccountNumber(), acc.GetBankId(), 120)
-	if err7 != nil {
-		panic(err7)
-	}
-	fmt.Println(c1.GetTotalBalance())
+}
 
-	passbook1 := acc.GetPassbook()
-	fmt.Println(passbook1.GetAllTransactionsAsString())
+func LoggerMiddleware(next http.Handler) http.Handler {
 
-	acc2, err5 := c2.OpenNewBankAccount(bk.GetId())
-	fmt.Println(c2.GetTotalBalance())
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			logger.Println(r.RequestURI)
 
-	errx := c1.TransferMoneyTo(acc.GetAccountNumber(), acc.GetBankId(), 100, acc2.GetAccountNumber(), acc2.GetBankId(), "Transfer from First account to second")
-	if errx != nil {
-		panic(errx)
-	}
+			next.ServeHTTP(w, r)
+		})
+}
 
-	passbook2 := acc2.GetPassbook()
-	fmt.Println(passbook2.GetAllTransactionsAsString())
-	passbook3 := acc.GetPassbook()
-	fmt.Println(passbook3.GetAllTransactionsAsString())
-	if err4 != nil || err5 != nil {
-		panic(err4)
-	}
+func ErrorHandlerMiddleware(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			defer func(w http.ResponseWriter) {
+				err := recover()
+				if err != nil {
+					fmt.Println("Internal Server Error:", err)
+					helper.SendErrorWithCustomMessage(w, "Internal Server Error:")
+				}
+			}(w)
+
+			next.ServeHTTP(w, r)
+		})
 }
