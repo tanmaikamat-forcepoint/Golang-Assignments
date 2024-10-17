@@ -1,7 +1,7 @@
 package bank
 
 import (
-	"bankingApp/bankAccount"
+	bankAccount "bankingApp/bankAccount/service"
 	"bankingApp/helper"
 	"errors"
 )

@@ -65,23 +65,7 @@ func GetBankById(w http.ResponseWriter, r *http.Request) {
 			helper.SendErrorWithCustomMessage(w, err.(error).Error())
 		}
 	}(w, r)
-
-	tempBankIdInStringFormat, ok := mux.Vars(r)["bankId"]
-	if !ok {
-		panic(errors.New("BankId Not Found"))
-	}
-	tempBankId, err2 := strconv.Atoi(tempBankIdInStringFormat)
-	if err2 != nil {
-		panic(err2)
-	}
-
-	errValidations := helper.ValidateAll(
-		validations.ValidateIfNotZero("bankId", tempBankId),
-		validations.ValidateIfNotNegative("bankId", tempBankId))
-
-	if errValidations != nil {
-		panic(errValidations)
-	}
+	tempBankId := ValidateAndGetBankIdFromPathParams(r)
 
 	tempBankInterface, err2 := bank.GetBankById(tempBankId)
 	if err2 != nil {
@@ -132,6 +116,17 @@ func DeleteBank(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	tempBankId := ValidateAndGetBankIdFromPathParams(r)
+	bank, err := adminUser.DeleteBank(tempBankId)
+	if err != nil {
+		panic(err)
+	}
+
+	helper.PackRequestBody(w, http.StatusCreated, "All Banks Successfully Retrieved", bank)
+}
+
+func ValidateAndGetBankIdFromPathParams(r *http.Request) int {
 	tempBankIdInStringFormat, ok := mux.Vars(r)["bankId"]
 	if !ok {
 		panic(errors.New("BankId Not Found"))
@@ -140,10 +135,11 @@ func DeleteBank(w http.ResponseWriter, r *http.Request) {
 	if err2 != nil {
 		panic(err2)
 	}
-	bank, err := adminUser.DeleteBank(tempBankId)
+	err := helper.ValidateAll(
+		validations.ValidateIfNotNegative("bankId", tempBankId),
+		validations.ValidateIfNotZero("bankId", tempBankId))
 	if err != nil {
 		panic(err)
 	}
-
-	helper.PackRequestBody(w, http.StatusCreated, "All Banks Successfully Retrieved", bank)
+	return tempBankId
 }

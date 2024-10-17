@@ -51,7 +51,18 @@ func ValidateAdminPermissionsMiddleware(next http.Handler) http.Handler {
 }
 func ValidateCustomerPermissionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
+		fmt.Println("Customer Validation Middleware Called")
+		fmt.Print(r.Context())
+		claims := r.Context().Value("claims").(*helper.Claims)
+		fmt.Print(claims.UserId)
+		customer, err := user.GetStaffInterfaceWithPassById(claims.UserId)
+		if err != nil {
+			helper.SendErrorWithCustomMessage(w, err.Error())
+			return
+		}
+		ctx := context.WithValue(r.Context(), constants.ClaimsCustomerKey, customer)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

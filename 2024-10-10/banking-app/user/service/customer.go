@@ -2,7 +2,7 @@ package user
 
 import (
 	bank "bankingApp/bank/service"
-	"bankingApp/bankAccount"
+	bankAccount "bankingApp/bankAccount/service"
 	"bankingApp/helper"
 	"errors"
 	"slices"

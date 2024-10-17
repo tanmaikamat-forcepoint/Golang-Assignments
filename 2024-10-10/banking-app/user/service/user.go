@@ -2,7 +2,7 @@ package user
 
 import (
 	bank "bankingApp/bank/service"
-	"bankingApp/bankAccount"
+	bankAccount "bankingApp/bankAccount/service"
 	"bankingApp/helper"
 	"errors"
 	"fmt"
@@ -34,6 +34,8 @@ type StaffInterface interface {
 	GetTotalBalance() (float64, error)
 	GetFullName() string
 	GetUserId() int
+	GetUserBankAccounts() []bankAccount.BankAccountInterface
+	GetAccountByBankIdAccountNumber(bankId, accountNumber int) (bankAccount.BankAccountInterface, error)
 }
 
 type User struct {
@@ -426,4 +428,12 @@ func GetStaffInterfaceWithPassById(userId int) (StaffInterface, error) {
 	}
 
 	return tempUser, nil
+}
+
+func (user *User) GetUserBankAccounts() []bankAccount.BankAccountInterface {
+	return user.customer.accounts
+}
+
+func (user *User) GetAccountByBankIdAccountNumber(bankId, accountNumber int) (bankAccount.BankAccountInterface, error) {
+	return user.customer.getAccountByNumber(accountNumber, bankId)
 }

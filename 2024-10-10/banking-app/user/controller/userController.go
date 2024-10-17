@@ -128,3 +128,18 @@ func GetAdminObjectFromContext(r *http.Request) (user.AdminInterfaceWithPass, er
 	return admin, nil
 
 }
+
+func GetCusomterObjectFromContext(r *http.Request) (user.StaffInterface, error) {
+	// return
+	tempStaffObj := r.Context().Value(constants.ClaimsCustomerKey).(user.StaffInterface)
+	if tempStaffObj == nil {
+		return &user.UserWithUsernamePassword{}, errors.New("Customer Validation Failed")
+	}
+	customer, ok := tempStaffObj.(user.StaffInterface)
+	if !ok {
+		return &user.UserWithUsernamePassword{}, errors.New("Invalid Customer")
+	}
+
+	return customer, nil
+
+}

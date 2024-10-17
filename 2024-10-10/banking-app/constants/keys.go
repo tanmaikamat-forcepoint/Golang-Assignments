@@ -6,3 +6,4 @@ type ContextKeys struct {
 
 var ClaimsContextKey = "claims"
 var ClaimsAdminKey = "admin"
+var ClaimsCustomerKey = "customer"

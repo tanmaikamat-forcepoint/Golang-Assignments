@@ -32,6 +32,7 @@ func main() {
 	mainRouter.HandleFunc("/login", userController.LoginUser).Methods(http.MethodPost)
 	routers.RegisterCusomterRouter(mainRouter)
 	routers.RegisterBankRouter(mainRouter)
+	routers.RegisterBankAccountRouter(mainRouter)
 
 	http.ListenAndServe(":4000", ErrorHandlerMiddleware(LoggerMiddleware(mainRouter)))
 

@@ -20,13 +20,13 @@ type transaction struct {
 	transactionTimestamp    string
 	balanceAfterTransaction float64
 	isATransfer             bool
-	otherAccountDetails     *transferAccountDetails
+	otherAccountDetails     *TransferAccountDetails
 	note                    string
 }
 
-type transferAccountDetails struct {
-	accountNumber int
-	bankId        int
+type TransferAccountDetails struct {
+	AccountNumber int
+	BankId        int
 }
 
 //Factory
@@ -47,7 +47,7 @@ func newTransaction(
 	transactionTimestamp string,
 	balanceAfterTransaction float64,
 	isATransfer bool,
-	otherAccountDetails *transferAccountDetails,
+	otherAccountDetails *TransferAccountDetails,
 	note string) *transaction {
 	return &transaction{
 		transactionId:           transactionId,
@@ -85,9 +85,9 @@ func (passbook *Passbook) addNewTransferToPassbook(
 	otherBankId int,
 	otherBankAccountNumber int, note string) int {
 	nextTransactionId := passbook.getNextTransactionId()
-	tempTransferAccountDetails := &transferAccountDetails{
-		accountNumber: otherBankAccountNumber,
-		bankId:        otherBankId,
+	tempTransferAccountDetails := &TransferAccountDetails{
+		AccountNumber: otherBankAccountNumber,
+		BankId:        otherBankId,
 	}
 
 	tempTransaction := newTransaction(nextTransactionId, entryType, amount, time.Now().UTC().String(), finalBalance, true, tempTransferAccountDetails, note)
@@ -115,4 +115,32 @@ func (passbook *Passbook) GetAllTransactionsAsString() string {
 	}
 	return tempTransaction
 
+}
+func (passbook *Passbook) GetAllTransactions() []*transaction {
+
+	return passbook.transactions
+
+}
+
+func (txn *transaction) GetId() int {
+	return txn.transactionId
+}
+
+func (txn *transaction) GetTransactionAmount() float64 {
+	return txn.transactionAmount
+}
+
+func (txn *transaction) GetBalanceAfterTransaction() float64 {
+	return txn.balanceAfterTransaction
+}
+
+func (txn *transaction) GetOtherAccountDetailsForTransfer() *TransferAccountDetails {
+	return txn.otherAccountDetails
+}
+
+func (txn *transaction) GetTransactionType() string {
+	return txn.transactionType
+}
+func (txn *transaction) GetNote() string {
+	return txn.note
 }
